@@ -1,0 +1,10 @@
+[package]
+name = "messycanvasctl"
+version = "0.1.0"
+authors = ["星川かえで <futursolo@icloud.com>"]
+
+[[bin]]
+name = "canvasctl"
+path = "src/main.rs"
+
+[dependencies]

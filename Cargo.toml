@@ -1,13 +1,19 @@
 [package]
 name = "messycanvas"
 version = "0.1.0"
-authors = ["星川かえで <futursolo@icloud.com>"]
+authors = ["Kaede Hoshikawa <futursolo@icloud.com>"]
+description = "Secure environment to execute untrusted code"
+readme = "README.md"
+license = "Apache-2.0"
 
 [[bin]]
 name = "canvasd"
 path = "src/main.rs"
 
 [dependencies]
+clap = "^2"
+pretty_logger = "^0.1"
+log = "^0.3"
 
 [workspace]
 members = [

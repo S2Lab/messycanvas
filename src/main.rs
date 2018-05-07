@@ -1,22 +1,23 @@
 #[macro_use]
-extern crate clap;
+extern crate messycanvascore;
+
 #[macro_use]
 extern crate log;
 extern crate pretty_logger;
+extern crate time;
 
-mod cli;
+mod logging;
 
-fn init_logger(parsed_args: &cli::ParsedArgs) {
-    if parsed_args.verbose {
-        pretty_logger::init_level(log::LogLevelFilter::Debug).unwrap();
-    } else {
-        pretty_logger::init_level(log::LogLevelFilter::Info).unwrap();
-    }
-}
+use messycanvascore::cli;
 
 fn main() {
-    let parsed_args = cli::parse_args();
-    init_logger(&parsed_args);
+    let crate_info = crate_info!();
 
-    debug!("Read configuration from path: {}", &parsed_args.config_path);
+    let canvasd_args = cli::CanvasdArgs::parse_args(&crate_info);
+    logging::init_logger(&canvasd_args);
+
+    debug!(
+        "Read configuration from path: {}",
+        &canvasd_args.config_path
+    );
 }

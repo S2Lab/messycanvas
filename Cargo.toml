@@ -11,11 +11,14 @@ name = "canvasd"
 path = "src/main.rs"
 
 [dependencies]
-clap = "^2"
+messycanvascore = {path = "messycanvascore"}
+
 pretty_logger = "^0.1"
 log = "^0.3"
+time = "^0.1"
 
 [workspace]
 members = [
     "messycanvasctl",
+    "messycanvascore",
 ]

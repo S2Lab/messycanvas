@@ -1,0 +1,10 @@
+[package]
+name = "messycanvascore"
+version = "0.1.0"
+authors = ["Kaede Hoshikawa <futursolo@icloud.com>"]
+description = "Core component shared by canvasd and canvasctl"
+readme = "README.md"
+license = "Apache-2.0"
+
+[dependencies]
+clap = "^2"

@@ -13,9 +13,7 @@ path = "src/main.rs"
 [dependencies]
 messycanvascore = {path = "messycanvascore"}
 
-pretty_logger = "^0.1"
-log = "^0.3"
-time = "^0.1"
+log = { version = "^0.4.1", features = ["std"] }
 
 [workspace]
 members = [

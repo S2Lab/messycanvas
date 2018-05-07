@@ -9,9 +9,9 @@ pub struct CrateInfo {
 }
 
 #[macro_export]
-macro_rules! crate_info {
+macro_rules! canvas_crate_info {
     () => {
-        messycanvascore::cli::CrateInfo {
+        $crate::cli::CrateInfo {
             name: env!("CARGO_PKG_NAME").to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
             authors: env!("CARGO_PKG_AUTHORS").to_string(),

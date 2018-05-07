@@ -1,23 +1,17 @@
 #[macro_use]
-extern crate messycanvascore;
+extern crate messycanvascore as core;
 
 #[macro_use]
 extern crate log;
-extern crate pretty_logger;
-extern crate time;
 
-mod logging;
-
-use messycanvascore::cli;
+use core::cli;
+use core::logging;
 
 fn main() {
-    let crate_info = crate_info!();
+    let crate_info = canvas_crate_info!();
 
-    let canvasd_args = cli::CanvasdArgs::parse_args(&crate_info);
-    logging::init_logger(&canvasd_args);
+    let parsed_args = cli::CanvasdArgs::parse_args(&crate_info);
+    logging::init_logger(parsed_args.verbose);
 
-    debug!(
-        "Read configuration from path: {}",
-        &canvasd_args.config_path
-    );
+    debug!("Read configuration from path: {}", &parsed_args.config_path);
 }

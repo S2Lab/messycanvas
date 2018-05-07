@@ -1,6 +1,6 @@
 [package]
 name = "messycanvas"
-version = "0.1.0"
+version = "0.0.0-dev.0"
 authors = ["Kaede Hoshikawa <futursolo@icloud.com>"]
 description = "Secure environment to execute untrusted code"
 readme = "README.md"

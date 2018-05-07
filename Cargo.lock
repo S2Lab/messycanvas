@@ -55,15 +55,15 @@ dependencies = [
 
 [[package]]
 name = "messycanvas"
-version = "0.1.0"
+version = "0.0.0-dev.0"
 dependencies = [
  "log 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "messycanvascore 0.1.0",
+ "messycanvascore 0.0.0-dev.0",
 ]
 
 [[package]]
 name = "messycanvascore"
-version = "0.1.0"
+version = "0.0.0-dev.0"
 dependencies = [
  "clap 2.31.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -72,7 +72,7 @@ dependencies = [
 
 [[package]]
 name = "messycanvasctl"
-version = "0.1.0"
+version = "0.0.0-dev.0"
 
 [[package]]
 name = "redox_syscall"

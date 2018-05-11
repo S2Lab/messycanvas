@@ -31,6 +31,44 @@ impl error::Error for IntegrityError {
     }
 }
 
+impl IntegrityError {
+    pub fn new(entry: &str, explanation: &str) -> Self {
+        Self {
+            entry: entry.to_string(),
+            explanation: explanation.to_string(),
+            cause: None,
+        }
+    }
+
+    pub fn new_with_cause(
+        entry: &str,
+        explanation: &str,
+        cause: Box<error::Error + Send + Sync>,
+    ) -> IntegrityError {
+        Self {
+            entry: entry.to_string(),
+            explanation: explanation.to_string(),
+            cause: Some(cause),
+        }
+    }
+
+    pub fn entry_required(entry: &str) -> Self {
+        Self::new(entry, "this entry is required")
+    }
+
+    pub fn type_mismatch(entry: &str, type_expected: &str, val: &toml::Value) -> Self {
+        Self {
+            entry: entry.to_string(),
+            explanation: format!(
+                "this entry has to be a(n) {}, found {}",
+                type_expected,
+                val.type_str()
+            ),
+            cause: None,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum Error {
     Toml(toml::de::Error),
@@ -86,58 +124,38 @@ impl Config {
     pub fn try_from_toml_value(v: toml::Value) -> Result<Config> {
         let root_map = match v {
             toml::Value::Table(m) => m,
-            _ => {
-                return Err(IntegrityError {
-                    entry: "(root)".to_string(),
-                    explanation: format!("this entry has to be a table, found {}", v.type_str()),
-                    cause: None,
-                }.into())
-            }
+            _ => return Err(IntegrityError::type_mismatch("(root)", "table", &v).into()),
         };
 
-        let root_map_clone = root_map.clone();
+        let listen_addr;
+        {
+            let general_val = root_map
+                .get("general")
+                .ok_or(IntegrityError::entry_required("general"))?;
 
-        let general_val = root_map.get("general").ok_or(IntegrityError {
-            entry: "general".to_string(),
-            explanation: "this entry is required".to_string(),
-            cause: None,
-        })?;
+            let general_map = general_val.as_table().ok_or(IntegrityError::type_mismatch(
+                "general",
+                "table",
+                general_val,
+            ))?;
 
-        let general_map = match general_val {
-            &toml::Value::Table(ref m) => m,
-            _ => {
-                return Err(IntegrityError {
-                    entry: "general".to_string(),
-                    explanation: format!(
-                        "this entry has to be a table, found {}",
-                        general_val.type_str()
-                    ),
-                    cause: None,
-                }.into())
-            }
-        };
+            let listen_addr_val = general_map
+                .get("listen_addr")
+                .ok_or(IntegrityError::entry_required("general.listen_addr"))?;
 
-        let listen_addr_val = general_map.get("listen_addr").ok_or(IntegrityError {
-            entry: "general.listen_addr".to_string(),
-            explanation: "this entry is required".to_string(),
-            cause: None,
-        })?;
-
-        let listen_addr = listen_addr_val
-            .as_str()
-            .ok_or(IntegrityError {
-                entry: "general.listen_addr".to_string(),
-                explanation: format!(
-                    "this entry has to be a string, found {}",
-                    listen_addr_val.type_str()
-                ),
-                cause: None,
-            })?
-            .to_string();
+            listen_addr = listen_addr_val
+                .as_str()
+                .ok_or(IntegrityError::type_mismatch(
+                    "general.listen_addr",
+                    "string",
+                    listen_addr_val,
+                ))?
+                .to_string();
+        }
 
         Ok(Self {
             listen_addr: listen_addr,
-            raw_map: root_map_clone,
+            raw_map: root_map,
         })
     }
     pub fn try_from_str(s: &str) -> Result<Config> {

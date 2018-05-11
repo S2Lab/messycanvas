@@ -14,7 +14,7 @@ macro_rules! canvas_crate_info {
         $crate::cli::CrateInfo {
             name: env!("CARGO_PKG_NAME").to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
-            authors: env!("CARGO_PKG_AUTHORS").to_string(),
+            authors: env!("CARGO_PKG_AUTHORS").replace(":", ",\n").to_string(),
             description: env!("CARGO_PKG_DESCRIPTION").to_string(),
         }
     }

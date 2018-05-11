@@ -1,0 +1,3 @@
+[general]
+listen_addr = "/tmp/canvasd.sock"
+sandbox_provider = "none"

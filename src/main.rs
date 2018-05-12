@@ -6,6 +6,9 @@ extern crate log;
 
 use core::cli;
 use core::logging;
+use core::cfg;
+
+use std::process;
 
 fn main() {
     let crate_info = canvas_crate_info!();
@@ -14,4 +17,13 @@ fn main() {
     logging::init_logger(parsed_args.verbose);
 
     debug!("Read configuration from path: {}", &parsed_args.config_path);
+    let config = match cfg::Config::try_from_cfg_file(&parsed_args.config_path) {
+        Ok(m) => m,
+        Err(e) => {
+            error!("Cannot load config file because `{}`", e);
+            process::exit(1);
+        }
+    };
+
+    debug!("Listen at: {}", &config.listen_addr);
 }

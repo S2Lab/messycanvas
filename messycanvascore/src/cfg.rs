@@ -2,6 +2,9 @@ use std::result;
 use std::error;
 use std::fmt;
 use std::collections;
+use std::path;
+use std::fs;
+use std::io;
 
 use toml;
 
@@ -32,36 +35,40 @@ impl error::Error for IntegrityError {
 }
 
 impl IntegrityError {
-    pub fn new(entry: &str, explanation: &str) -> Self {
+    pub fn new<T: AsRef<str>>(entry: T, explanation: T) -> Self {
         Self {
-            entry: entry.to_string(),
-            explanation: explanation.to_string(),
+            entry: entry.as_ref().to_owned(),
+            explanation: explanation.as_ref().to_owned(),
             cause: None,
         }
     }
 
-    pub fn new_with_cause(
-        entry: &str,
-        explanation: &str,
+    pub fn new_with_cause<T: AsRef<str>>(
+        entry: T,
+        explanation: T,
         cause: Box<error::Error + Send + Sync>,
     ) -> IntegrityError {
         Self {
-            entry: entry.to_string(),
-            explanation: explanation.to_string(),
+            entry: entry.as_ref().to_owned(),
+            explanation: explanation.as_ref().to_owned(),
             cause: Some(cause),
         }
     }
 
-    pub fn entry_required(entry: &str) -> Self {
-        Self::new(entry, "this entry is required")
+    pub fn entry_required<T: AsRef<str>>(entry: T) -> Self {
+        Self {
+            entry: entry.as_ref().to_owned(),
+            explanation: "this entry is required".to_owned(),
+            cause: None,
+        }
     }
 
-    pub fn type_mismatch(entry: &str, type_expected: &str, val: &toml::Value) -> Self {
+    pub fn type_mismatch<T: AsRef<str>>(entry: T, type_expected: T, val: &toml::Value) -> Self {
         Self {
-            entry: entry.to_string(),
+            entry: entry.as_ref().to_owned(),
             explanation: format!(
                 "this entry has to be a(n) {}, found {}",
-                type_expected,
+                type_expected.as_ref(),
                 val.type_str()
             ),
             cause: None,
@@ -73,6 +80,7 @@ impl IntegrityError {
 pub enum Error {
     Toml(toml::de::Error),
     Integrity(IntegrityError),
+    Io(io::Error),
 }
 
 impl fmt::Display for Error {
@@ -80,6 +88,7 @@ impl fmt::Display for Error {
         match *self {
             Error::Toml(ref e) => fmt::Display::fmt(&e, f),
             Error::Integrity(ref e) => fmt::Display::fmt(&e, f),
+            Error::Io(ref e) => fmt::Display::fmt(&e, f),
         }
     }
 }
@@ -89,6 +98,7 @@ impl error::Error for Error {
         match *self {
             Error::Toml(ref e) => e.description(),
             Error::Integrity(ref e) => e.description(),
+            Error::Io(ref e) => e.description(),
         }
     }
 
@@ -96,6 +106,7 @@ impl error::Error for Error {
         match *self {
             Error::Toml(ref e) => Some(e),
             Error::Integrity(ref e) => Some(e),
+            Error::Io(ref e) => Some(e),
         }
     }
 }
@@ -109,6 +120,12 @@ impl From<toml::de::Error> for Error {
 impl From<IntegrityError> for Error {
     fn from(e: IntegrityError) -> Error {
         Error::Integrity(e)
+    }
+}
+
+impl From<io::Error> for Error {
+    fn from(e: io::Error) -> Error {
+        Error::Io(e)
     }
 }
 
@@ -150,7 +167,7 @@ impl Config {
                     "string",
                     listen_addr_val,
                 ))?
-                .to_string();
+                .to_owned();
         }
 
         Ok(Self {
@@ -158,7 +175,18 @@ impl Config {
             raw_map: root_map,
         })
     }
-    pub fn try_from_str(s: &str) -> Result<Config> {
-        Self::try_from_toml_value(s.parse::<toml::Value>()?)
+    pub fn try_from_str<T: AsRef<str>>(s: T) -> Result<Config> {
+        Self::try_from_toml_value(s.as_ref().parse::<toml::Value>()?)
+    }
+
+    pub fn try_from_cfg_file<T: AsRef<path::Path>>(path: T) -> Result<Config> {
+        use std::io::Read;
+
+        let mut cfg_file = fs::File::open(path.as_ref())?;
+        let mut cfg_string = String::new();
+
+        cfg_file.read_to_string(&mut cfg_string)?;
+
+        Self::try_from_str(&cfg_string)
     }
 }

@@ -16,14 +16,17 @@ fn main() {
     let parsed_args = cli::CanvasdArgs::parse_args(&crate_info);
     logging::init_logger(parsed_args.verbose);
 
-    debug!("Read configuration from path: {}", &parsed_args.config_path);
+    debug!(
+        "Reading configuration from path: {}",
+        &parsed_args.config_path
+    );
     let config = match cfg::Config::try_from_cfg_file(&parsed_args.config_path) {
         Ok(m) => m,
         Err(e) => {
-            error!("Cannot load config file because `{}`", e);
+            error!("Cannot read configuration because `{}`", e);
             process::exit(1);
         }
     };
 
-    debug!("Listen at: {}", &config.listen_addr);
+    debug!("Listening at: {}", &config.listen_addr);
 }

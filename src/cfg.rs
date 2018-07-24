@@ -56,7 +56,7 @@ impl Config {
         Self::try_from_toml_value(s.as_ref().parse::<toml::Value>()?)
     }
 
-    pub fn try_from_cfg_file<T: AsRef<path::Path>>(path: T) -> Result<Config> {
+    pub fn try_from_cfg_path<T: AsRef<path::Path>>(path: T) -> Result<Config> {
         use std::io::Read;
 
         let mut cfg_file = fs::File::open(path.as_ref())?;

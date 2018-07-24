@@ -20,15 +20,17 @@ use std::process;
 /// 12. [ ] Return
 pub fn main() {
     let parsed_args = match cli::CanvasdArgs::parse_args() {
-        Some(m) => m,
-        None => process::exit(1),
+        Ok(m) => m,
+        Err(e) => {
+            return e.print_and_exit();
+        }
     };
     logging::init_logger(parsed_args.verbose);
     debug!(
         "Reading configuration from path: {}",
         &parsed_args.config_path
     );
-    let config = match cfg::Config::try_from_cfg_file(&parsed_args.config_path) {
+    let config = match cfg::Config::try_from_cfg_path(&parsed_args.config_path) {
         Ok(m) => m,
         Err(e) => {
             error!("Cannot read configuration because `{}`", e);

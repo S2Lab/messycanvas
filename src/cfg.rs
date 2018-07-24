@@ -1,10 +1,10 @@
-use std::result;
+use std::collections;
 use std::error;
 use std::fmt;
-use std::collections;
-use std::path;
 use std::fs;
 use std::io;
+use std::path;
+use std::result;
 
 use toml;
 
@@ -35,7 +35,7 @@ impl error::Error for IntegrityError {
 }
 
 impl IntegrityError {
-    pub fn new<T: AsRef<str>>(entry: T, explanation: T) -> Self {
+    pub fn new<T: AsRef<str>, U: AsRef<str>>(entry: T, explanation: U) -> Self {
         Self {
             entry: entry.as_ref().to_owned(),
             explanation: explanation.as_ref().to_owned(),
@@ -43,9 +43,9 @@ impl IntegrityError {
         }
     }
 
-    pub fn new_with_cause<T: AsRef<str>>(
+    pub fn new_with_cause<T: AsRef<str>, U: AsRef<str>>(
         entry: T,
-        explanation: T,
+        explanation: U,
         cause: Box<error::Error + Send + Sync>,
     ) -> IntegrityError {
         Self {
@@ -56,23 +56,22 @@ impl IntegrityError {
     }
 
     pub fn entry_required<T: AsRef<str>>(entry: T) -> Self {
-        Self {
-            entry: entry.as_ref().to_owned(),
-            explanation: "this entry is required".to_owned(),
-            cause: None,
-        }
+        Self::new(entry, "this entry is required")
     }
 
-    pub fn type_mismatch<T: AsRef<str>>(entry: T, type_expected: T, val: &toml::Value) -> Self {
-        Self {
-            entry: entry.as_ref().to_owned(),
-            explanation: format!(
+    pub fn type_mismatch<T: AsRef<str>, U: AsRef<str>>(
+        entry: T,
+        type_expected: U,
+        val: &toml::Value,
+    ) -> Self {
+        Self::new(
+            entry,
+            format!(
                 "this entry has to be a(n) {}, found {}",
                 type_expected.as_ref(),
                 val.type_str()
             ),
-            cause: None,
-        }
+        )
     }
 }
 

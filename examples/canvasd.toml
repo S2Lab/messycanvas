@@ -1,0 +1,4 @@
+[general]
+#listen_addr = "/tmp/canvasd.sock"  # Unix Socket
+listen_addr = "localhost:6451"
+sandbox_provider = "none"

@@ -1,5 +1,5 @@
-use simple_logger;
 use log;
+use simple_logger;
 
 pub fn init_logger(verbose: bool) {
     if verbose {

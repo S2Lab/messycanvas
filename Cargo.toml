@@ -6,17 +6,15 @@ description = "Secure environment to execute untrusted code"
 readme = "README.md"
 license = "Apache-2.0"
 
-[[bin]]
-name = "canvasd"
-path = "src/main.rs"
-
 [dependencies]
-messycanvascore = {path = "messycanvascore"}
-
 log = { version = "^0.4.1", features = ["std"] }
+clap = "^2"
+simple_logger = "^0.5.0"
+toml = "^0.4.6"
+lazy_static = "^1.0.0"
 
-[workspace]
-members = [
-    "messycanvasctl",
-    "messycanvascore",
-]
+#hyper = "0.12"
+#futures = "0.1.21"
+
+#[target.'cfg(unix)'.dependencies]
+#hyperlocal = "^0.4.1"

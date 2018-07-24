@@ -1,13 +1,18 @@
 use super::cli;
 use super::logging;
 
+use std::process;
+
 /// Canvasctl main function flow:
 /// 1. Parse command line arguments
 /// 2. Initialize logger
 /// 3. Dispatch command to corresponding function
 /// 4. Return
 pub fn main() {
-    let parsed_args = cli::CanvasCtlArgs::parse_args();
+    let parsed_args = match cli::CanvasCtlArgs::parse_args() {
+        Some(m) => m,
+        None => process::exit(1),
+    };
     logging::init_logger(parsed_args.verbose);
 }
 

@@ -1,6 +1,9 @@
 #[macro_use]
 extern crate clap;
+extern crate failure;
 extern crate simple_logger;
+#[macro_use]
+extern crate failure_derive;
 extern crate toml;
 #[macro_use]
 extern crate lazy_static;
@@ -14,6 +17,7 @@ extern crate log;
 
 pub mod cfg;
 mod cli;
+pub mod error;
 mod logging;
 mod srv;
 

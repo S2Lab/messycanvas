@@ -19,7 +19,10 @@ use std::process;
 /// 11. [ ] Shutdown server
 /// 12. [ ] Return
 pub fn main() {
-    let parsed_args = cli::CanvasdArgs::parse_args();
+    let parsed_args = match cli::CanvasdArgs::parse_args() {
+        Some(m) => m,
+        None => process::exit(1),
+    };
     logging::init_logger(parsed_args.verbose);
     debug!(
         "Reading configuration from path: {}",

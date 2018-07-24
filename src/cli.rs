@@ -1,9 +1,4 @@
-use std::process;
-
 use clap;
-
-static CANVASD_NAME: &'static str = "cavasd";
-static CANVASCTL_NAME: &'static str = "cavasctl";
 
 fn get_default_config_path() -> &'static str {
     lazy_static! {
@@ -20,6 +15,13 @@ enum ParserType {
 }
 
 impl ParserType {
+    fn binary_name(&self) -> &str {
+        match *self {
+            ParserType::Canvasd => "canvasd",
+            ParserType::CanvasCtl => "canvasctl",
+        }
+    }
+
     fn build<'a, 'b>(&self) -> clap::App<'a, 'b> {
         lazy_static! {
             static ref CONFIG_PATH_DESCRIPTION: String = format!(
@@ -33,10 +35,8 @@ impl ParserType {
             );
         }
 
-        let app = clap::App::new(match *self {
-            ParserType::Canvasd => CANVASD_NAME,
-            ParserType::CanvasCtl => CANVASCTL_NAME,
-        }).version(crate_version!())
+        let app = clap::App::new(self.binary_name())
+            .version(crate_version!())
             .author(crate_authors!())
             .about(crate_description!())
             .arg(
@@ -68,16 +68,19 @@ pub struct CanvasdArgs {
 }
 
 impl CanvasdArgs {
-    pub fn parse_args() -> CanvasdArgs {
-        let matches = ParserType::Canvasd.build().get_matches();
+    pub fn parse_args() -> Option<CanvasdArgs> {
+        let matches = match ParserType::Canvasd.build().get_matches_safe() {
+            Ok(m) => m,
+            Err(_) => return None,
+        };
 
-        CanvasdArgs {
+        Some(CanvasdArgs {
             config_path: matches
                 .value_of("config-path")
                 .unwrap_or(get_default_config_path())
                 .into(),
             verbose: matches.is_present("verbose"),
-        }
+        })
     }
 }
 
@@ -101,16 +104,18 @@ pub struct CanvasCtlArgs {
 }
 
 impl CanvasCtlArgs {
-    pub fn parse_args() -> CanvasCtlArgs {
-        let parser = ParserType::CanvasCtl.build();
-        let matches = parser.get_matches();
+    pub fn parse_args() -> Option<CanvasCtlArgs> {
+        let matches = match ParserType::CanvasCtl.build().get_matches_safe() {
+            Ok(m) => m,
+            Err(_) => return None,
+        };
 
-        CanvasCtlArgs {
+        Some(CanvasCtlArgs {
             command: match CanvasCtlCommand::maybe_from_str(matches.subcommand_name()) {
                 Some(m) => m,
                 None => {
                     println!("{}", matches.usage());
-                    process::exit(1);
+                    return None;
                 }
             },
             config_path: matches
@@ -118,6 +123,6 @@ impl CanvasCtlArgs {
                 .unwrap_or(get_default_config_path())
                 .into(),
             verbose: matches.is_present("verbose"),
-        }
+        })
     }
 }

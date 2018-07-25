@@ -15,9 +15,11 @@ extern crate log;
 //#[cfg(unix)]
 //extern crate hyperlocal;
 
+#[macro_use]
+mod priv_macro;
+
 pub mod cfg;
 mod cli;
-pub mod error;
 mod logging;
 mod srv;
 

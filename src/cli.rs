@@ -1,5 +1,6 @@
 use std::process;
 use std::result;
+use std::str as std_str;
 
 use clap;
 
@@ -93,16 +94,29 @@ impl CanvasdArgs {
     }
 }
 
+type CmdParseResult<T> = result::Result<T, CmdParseError>;
+
+#[derive(Fail, Debug)]
+#[fail(display = "cannot parse str as CanvasCtlCommand")]
+pub struct CmdParseError {}
+
+impl CmdParseError {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
 #[derive(Debug)]
 pub enum CanvasCtlCommand {
     CfgTest,
 }
 
-impl CanvasCtlCommand {
-    pub fn maybe_from_str(s: &str) -> Option<CanvasCtlCommand> {
+impl std_str::FromStr for CanvasCtlCommand {
+    type Err = CmdParseError;
+    fn from_str(s: &str) -> CmdParseResult<CanvasCtlCommand> {
         match s {
-            "cfgtest" => Some(CanvasCtlCommand::CfgTest),
-            _ => None,
+            "cfgtest" => Ok(CanvasCtlCommand::CfgTest),
+            _ => Err(CmdParseError::new()),
         }
     }
 }
@@ -123,10 +137,11 @@ impl CanvasCtlArgs {
         let get_usage_err = || Error::PrintUsage(matches.usage().to_owned());
 
         Ok(CanvasCtlArgs {
-            command: CanvasCtlCommand::maybe_from_str(matches
+            command: matches
                 .subcommand_name()
-                .ok_or_else(get_usage_err)?)
-                .ok_or_else(get_usage_err)?,
+                .ok_or_else(get_usage_err)?
+                .parse()
+                .map_err(|_e| get_usage_err())?,
             config_path: matches
                 .value_of("config-path")
                 .unwrap_or(get_default_config_path())

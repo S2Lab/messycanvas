@@ -1,10 +1,49 @@
-use super::error::{Error, Result};
-
 use std::collections;
 use std::fs;
+use std::io;
 use std::path;
+use std::result;
 
 use toml;
+
+pub type Result<T> = result::Result<T, Error>;
+
+#[derive(Fail, Debug)]
+pub enum Error {
+    #[fail(display = "{}", _0)]
+    Toml(#[cause] toml::de::Error),
+    #[fail(display = "{}", _0)]
+    Io(#[cause] io::Error),
+    #[fail(display = "For entry {}, {}.", entry, explanation)]
+    Integrity { entry: String, explanation: String },
+}
+
+impl Error {
+    pub fn entry_required<T: AsRef<str>>(entry: T) -> Self {
+        Error::Integrity {
+            entry: entry.as_ref().to_owned(),
+            explanation: "this entry is required".to_owned(),
+        }
+    }
+
+    pub fn type_mismatch<T: AsRef<str>, U: AsRef<str>>(
+        entry: T,
+        type_expected: U,
+        val: &toml::Value,
+    ) -> Self {
+        Error::Integrity {
+            entry: entry.as_ref().to_owned(),
+            explanation: format!(
+                "this entry has to be a(n) {}, found {}",
+                type_expected.as_ref(),
+                val.type_str()
+            ),
+        }
+    }
+}
+
+impl_from!(Error::Toml, toml::de::Error);
+impl_from!(Error::Io, io::Error);
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -16,30 +55,28 @@ impl Config {
     pub fn try_from_toml_value(v: toml::Value) -> Result<Config> {
         let root_map = match v {
             toml::Value::Table(m) => m,
-            _ => return Err(Error::cfg_integrity_type_mismatch("(root)", "table", &v).into()),
+            _ => return Err(Error::type_mismatch("(root)", "table", &v).into()),
         };
 
         let listen_addr;
         {
             let general_val = root_map
                 .get("general")
-                .ok_or(Error::cfg_integrity_entry_required("general"))?;
+                .ok_or(Error::entry_required("general"))?;
 
-            let general_map = general_val
-                .as_table()
-                .ok_or(Error::cfg_integrity_type_mismatch(
-                    "general",
-                    "table",
-                    general_val,
-                ))?;
+            let general_map = general_val.as_table().ok_or(Error::type_mismatch(
+                "general",
+                "table",
+                general_val,
+            ))?;
 
             let listen_addr_val = general_map
                 .get("listen_addr")
-                .ok_or(Error::cfg_integrity_entry_required("general.listen_addr"))?;
+                .ok_or(Error::entry_required("general.listen_addr"))?;
 
             listen_addr = listen_addr_val
                 .as_str()
-                .ok_or(Error::cfg_integrity_type_mismatch(
+                .ok_or(Error::type_mismatch(
                     "general.listen_addr",
                     "string",
                     listen_addr_val,

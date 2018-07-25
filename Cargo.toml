@@ -7,14 +7,17 @@ readme = "README.md"
 license = "Apache-2.0"
 
 [dependencies]
-log = { version = "^0.4.1", features = ["std"] }
 clap = "^2"
+log = { version = "^0.4.1", features = ["std"] }
 simple_logger = "^0.5.0"
 toml = "^0.4.6"
+
+# Boilerplate & Control Flow
 lazy_static = "^1.0.0"
 failure = "^0.1.1"
 failure_derive = "^0.1.1"
 
+# HTTP & IO
 #hyper = "0.12"
 #futures = "0.1.21"
 

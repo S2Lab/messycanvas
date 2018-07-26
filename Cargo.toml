@@ -18,8 +18,5 @@ failure = "^0.1.1"
 failure_derive = "^0.1.1"
 
 # HTTP & IO
-#hyper = "0.12"
+actix-web = "^0.7"
 #futures = "~0.1"
-
-#[target.'cfg(unix)'.dependencies]
-#hyperlocal = "^0.4.1"

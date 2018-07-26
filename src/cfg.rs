@@ -14,7 +14,7 @@ pub enum Error {
     Toml(#[cause] toml::de::Error),
     #[fail(display = "{}", _0)]
     Io(#[cause] io::Error),
-    #[fail(display = "For entry {}, {}.", entry, explanation)]
+    #[fail(display = "Entry `{}` {}.", entry, explanation)]
     Integrity { entry: String, explanation: String },
 }
 
@@ -22,7 +22,7 @@ impl Error {
     pub fn entry_required<T: AsRef<str>>(entry: T) -> Self {
         Error::Integrity {
             entry: entry.as_ref().to_owned(),
-            explanation: "this entry is required".to_owned(),
+            explanation: "is required".to_owned(),
         }
     }
 
@@ -34,7 +34,7 @@ impl Error {
         Error::Integrity {
             entry: entry.as_ref().to_owned(),
             explanation: format!(
-                "this entry has to be a(n) {}, found {}",
+                "has to be a(n) {}, found {}",
                 type_expected.as_ref(),
                 val.type_str()
             ),
@@ -60,27 +60,21 @@ impl Config {
 
         let listen_addr;
         {
-            let general_val = root_map
+            let general_map = root_map
                 .get("general")
-                .ok_or(Error::entry_required("general"))?;
+                .ok_or(Error::entry_required("general"))
+                .and_then(|m| {
+                    m.as_table()
+                        .ok_or(Error::type_mismatch("general", "table", m))
+                })?;
 
-            let general_map = general_val.as_table().ok_or(Error::type_mismatch(
-                "general",
-                "table",
-                general_val,
-            ))?;
-
-            let listen_addr_val = general_map
+            listen_addr = general_map
                 .get("listen_addr")
-                .ok_or(Error::entry_required("general.listen_addr"))?;
-
-            listen_addr = listen_addr_val
-                .as_str()
-                .ok_or(Error::type_mismatch(
-                    "general.listen_addr",
-                    "string",
-                    listen_addr_val,
-                ))?
+                .ok_or(Error::entry_required("general.listen_addr"))
+                .and_then(|m| {
+                    m.as_str()
+                        .ok_or(Error::type_mismatch("general.listen_addr", "string", m))
+                })?
                 .to_owned();
         }
 
@@ -101,6 +95,11 @@ impl Config {
 
         cfg_file.read_to_string(&mut cfg_string)?;
 
-        Self::try_from_str(&cfg_string)
+        let config = Self::try_from_str(&cfg_string);
+        debug!(
+            "Reading configuration from path: {}",
+            path.as_ref().display()
+        );
+        config
     }
 }

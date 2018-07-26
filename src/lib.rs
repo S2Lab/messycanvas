@@ -1,15 +1,17 @@
 #[macro_use]
 extern crate clap;
-extern crate failure;
 extern crate simple_logger;
-#[macro_use]
-extern crate failure_derive;
 extern crate toml;
 #[macro_use]
-extern crate lazy_static;
+extern crate log;
 
 #[macro_use]
-extern crate log;
+extern crate lazy_static;
+#[macro_use]
+extern crate failure_derive;
+extern crate failure;
+
+extern crate actix_web;
 //extern crate futures;
 
 #[macro_use]

@@ -19,7 +19,7 @@ failure_derive = "^0.1.1"
 
 # HTTP & IO
 #hyper = "0.12"
-#futures = "0.1.21"
+#futures = "~0.1"
 
 #[target.'cfg(unix)'.dependencies]
 #hyperlocal = "^0.4.1"

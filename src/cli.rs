@@ -1,4 +1,3 @@
-use std::process;
 use std::result;
 use std::str as std_str;
 
@@ -8,27 +7,32 @@ type Result<T> = result::Result<T, Error>;
 
 #[derive(Fail, Debug)]
 pub enum Error {
-    #[fail(display = "{}", _0)]
-    Clap(#[cause] clap::Error),
+    #[fail(display = "message displayed and the program should exit with status 0")]
+    MessageDisplayed,
+    #[fail(display = "invalid argument")]
+    InvalidArgument,
     #[fail(display = "invalid command")]
-    PrintUsage(String),
+    InvalidCommand,
 }
 
 impl Error {
-    pub fn print_and_exit(&self) {
+    pub fn exit_code(&self) -> i32 {
         match *self {
-            Error::Clap(ref e) => e.exit(),
-            Error::PrintUsage(ref s) => {
-                eprintln!("{}", s);
-                process::exit(1);
-            }
+            Error::MessageDisplayed => 0,
+            _ => 1,
         }
     }
 }
 
 impl From<clap::Error> for Error {
     fn from(e: clap::Error) -> Error {
-        Error::Clap(e)
+        if e.use_stderr() {
+            eprintln!("{}", e.message);
+            Error::InvalidArgument
+        } else {
+            println!("{}", e.message);
+            Error::MessageDisplayed
+        }
     }
 }
 
@@ -94,29 +98,17 @@ impl CanvasdArgs {
     }
 }
 
-type CmdParseResult<T> = result::Result<T, CmdParseError>;
-
-#[derive(Fail, Debug)]
-#[fail(display = "cannot parse str as CanvasCtlCommand")]
-pub struct CmdParseError {}
-
-impl CmdParseError {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
 #[derive(Debug)]
 pub enum CanvasCtlCommand {
     CfgTest,
 }
 
 impl std_str::FromStr for CanvasCtlCommand {
-    type Err = CmdParseError;
-    fn from_str(s: &str) -> CmdParseResult<CanvasCtlCommand> {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<CanvasCtlCommand> {
         match s {
             "cfgtest" => Ok(CanvasCtlCommand::CfgTest),
-            _ => Err(CmdParseError::new()),
+            _ => Err(Error::InvalidCommand),
         }
     }
 }
@@ -134,14 +126,15 @@ impl CanvasCtlArgs {
             .subcommand(clap::SubCommand::with_name("cfgtest").about("Tests configuration"))
             .get_matches_safe()?;
 
-        let get_usage_err = || Error::PrintUsage(matches.usage().to_owned());
-
         Ok(CanvasCtlArgs {
             command: matches
                 .subcommand_name()
-                .ok_or_else(get_usage_err)?
-                .parse()
-                .map_err(|_e| get_usage_err())?,
+                .ok_or(Error::InvalidCommand)
+                .and_then(|m| m.parse())
+                .map_err(|e| {
+                    eprintln!("{}", matches.usage());
+                    e
+                })?,
             config_path: matches
                 .value_of("config-path")
                 .unwrap_or(get_default_config_path())

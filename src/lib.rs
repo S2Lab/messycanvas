@@ -11,15 +11,13 @@ extern crate lazy_static;
 #[macro_use]
 extern crate log;
 //extern crate futures;
-//extern crate hyper;
-//#[cfg(unix)]
-//extern crate hyperlocal;
 
 #[macro_use]
 mod priv_macro;
 
 pub mod cfg;
 mod cli;
+mod exit;
 mod logging;
 mod srv;
 
